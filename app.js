@@ -18,6 +18,8 @@ const campgroundRoutes 		= require('./routes/campgrounds'),
 	  commentsRoute			= require('./routes/comments'),
 	  indexRoutes			= require('./routes/index');
 
+
+require('dotenv').config()
 	 	
 app.set('view engine', "ejs");
 
@@ -26,6 +28,8 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(methodOverride('_method'));
 
 app.use(express.static(__dirname + '/public'))
+
+console.log(process.env);
 
 mongoose.connect(process.env.DATABASE, {useNewUrlParser: true});
 
@@ -72,5 +76,5 @@ app.use('/campgrounds', campgroundRoutes);
 app.use('/campgrounds/:id/comments', commentsRoute);
 app.use(indexRoutes);
 
-console.log(process.env.PORT);
+// console.log(process.env.PORT);
 app.listen(port, function(){console.log("Server has started")})
