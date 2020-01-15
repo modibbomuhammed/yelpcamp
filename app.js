@@ -27,7 +27,7 @@ app.use(methodOverride('_method'));
 
 app.use(express.static(__dirname + '/public'))
 
-mongoose.connect('mongodb://localhost:27017/yelp_camp', {useNewUrlParser: true});
+mongoose.connect(process.env.DATABASE, {useNewUrlParser: true});
 
 mongoose.set('useUnifiedTopology', true);
 
@@ -72,5 +72,5 @@ app.use('/campgrounds', campgroundRoutes);
 app.use('/campgrounds/:id/comments', commentsRoute);
 app.use(indexRoutes);
 
-
+console.log(process.env.PORT);
 app.listen(port, function(){console.log("Server has started")})
