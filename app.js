@@ -31,9 +31,13 @@ app.use(express.static(__dirname + '/public'))
 
 console.log(process.env);
 
-mongoose.connect(process.env.DATABASE, {useNewUrlParser: true});
+mongoose.connect(process.env.DATABASE, {useNewUrlParser: true, useUnifiedTopology: true})
 
-mongoose.set('useUnifiedTopology', true);
+.then(()=> console.log("Connected to the DB"))
+
+.catch(err=> console.log(`Failed to connect to DB because of ${err}`))
+
+// mongoose.set('useUnifiedTopology', true);
 
 // seedDB();
 
