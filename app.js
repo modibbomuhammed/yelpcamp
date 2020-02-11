@@ -12,7 +12,7 @@ const express 				= require('express'),
 	  User					= require('./models/user'),
 	  Comment				= require('./models/comments'),
 	  seedDB				= require('./seeds'),
-	  port 					= process.env.PORT || 3000
+	  port 					= process.env.PORT
 
 const campgroundRoutes 		= require('./routes/campgrounds'),
 	  commentsRoute			= require('./routes/comments'),
