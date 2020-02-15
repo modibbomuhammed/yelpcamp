@@ -1,12 +1,15 @@
-const express 	= require('express'),
-	  Campground = require('../models/campgrounds'),
-	  middleware = require('../middleware'),
+const express 		= require('express'),
+	  Campground	= require('../models/campgrounds'),
+	  middleware	= require('../middleware'),
+	  multer		= require('multer'),
+	  cloudinary	= require('cloudinary'),
 	  router	= express.Router(),
 	  NodeGeocoder = require('node-geocoder');
 		
- 
-
+// dotenv config
 require("dotenv").config()
+
+// Geocoder config
 const options = {
   provider: 'google',
   httpAdapter: 'https',
@@ -16,7 +19,31 @@ const options = {
  
 const geocoder = NodeGeocoder(options);
 
+// multer config
+const storage = multer.diskStorage({
+	filename: function(req, file, cb){
+		cb(null, file.fieldname + Date.now() + file.originalname)
+	}
+})
 
+const upload = multer({
+	storage,
+	fileFilter: imageFilter
+})
+
+function imageFilter(req,file,cb){
+	if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/i)) {
+        return cb(new Error('Only image files are allowed!'), false);
+    }
+    cb(null, true);
+}
+
+// cloudinary config
+cloudinary.config({
+	cloud_name: 'modibbomuhammed',
+	api_key: process.env.CLOUDINARY_API_KEY,
+	api_secret: process.env.CLOUDINARY_API_SECRET
+})
 // campground routes
 
 router.get('/', (req,res) => {
@@ -30,9 +57,9 @@ router.get('/', (req,res) => {
   	
 })
 
-router.post('/', middleware.isLoggedIn, async (req,res) => {
+router.post('/', middleware.isLoggedIn, upload.single('image'), async (req,res) => {
 	var newCampground = {name: req.body.name,
-						 image: req.body.image,
+						 // image: req.body.image,
 						 description: req.body.description,
 						 price: req.body.price,
 						 author:{
@@ -41,8 +68,11 @@ router.post('/', middleware.isLoggedIn, async (req,res) => {
 						 }
 						}
 		try{
+			let picture = await cloudinary.v2.uploader.upload(req.file.path)
 			let data = await geocoder.geocode(req.body.location)
 			console.log(data[0])
+			newCampground.image = picture.secure_url;
+			newCampground.imageId = picture.public_id;
 			newCampground.lat = data[0].latitude;
 			newCampground.lng = data[0].longitude;
 			newCampground.location = data[0].formattedAddress;
@@ -67,11 +97,9 @@ router.get('/:id', (req,res) => {
 	var identity = req.params.id;
 	Campground.findById(identity).populate('comments').exec(function(err, foundcamp){
 		if(err || !foundcamp){
-			console.log(err);
 			req.flash("error","Campground Not Found!!");
 			res.redirect('back')
 		} else {
-			console.log(foundcamp);
 			res.render('campgrounds/show', {camp: foundcamp});
 		}
 	})
@@ -93,38 +121,46 @@ router.get('/:id/edit', middleware.checkCampgroundOwnership ,function(req,res){
 	
 })
 
-router.put('/:id', middleware.checkCampgroundOwnership , async function(req,res){
+router.put('/:id', middleware.checkCampgroundOwnership, upload.single('camp[image]'), async function(req,res){
 	let newCamp = req.body.camp;
 	newCamp.author = {
 		id: req.user._id,
 		username: req.user.username
 	}
 		try{
+			let findCamp = await Campground.findById(req.params.id)
+			await cloudinary.v2.uploader.destroy(findCamp.imageId)
+			let picture = await cloudinary.v2.uploader.upload(req.file.path);
+			newCamp.image = picture.secure_url;
+			newCamp.imageId = picture.public_id;
 			let data = await geocoder.geocode(newCamp.location)
 			newCamp.lat = data[0].latitude;
 			newCamp.lng = data[0].longitude;
-			let updatedCamp = await Campground.findByIdAndUpdate(req.params.id, newCamp)
-			console.log(updatedCamp)
+			await Campground.findByIdAndUpdate(req.params.id, newCamp);
 			req.flash("success", "You have updated your campground!!")
-			res.redirect('/campgrounds/' + updatedCamp._id);
+			res.redirect('/campgrounds/' + req.params.id);
 		}
 	
 		catch(err){
 			console.log(err)
 			req.flash('error', `There was a problem due to ${err}`);
+			res.redirect('/campgrounds');
 		}
 	
 })
 
-router.delete('/:id', middleware.checkCampgroundOwnership ,function(req,res){
-	Campground.findByIdAndRemove(req.params.id, function(err){
-		if(err){
+router.delete('/:id', middleware.checkCampgroundOwnership , async function(req,res){
+	try{
+		let findCamp = await Campground.findById(req.params.id);
+		await cloudinary.v2.uploader.destroy(findCamp.imageId);
+		await Campground.findByIdAndRemove(req.params.id);
+		res.redirect('/campgrounds');
+	}
+	
+	catch(err){
 			console.log(err)
 			res.redirect('/campgrounds')
-		} else {
-			res.redirect('/campgrounds')
-		}
-	})
+	}
 })
 
 
