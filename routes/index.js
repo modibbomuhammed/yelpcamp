@@ -33,10 +33,12 @@ router.get('/login', (req,res) => {
 	res.render('login');
 })
 
+
 router.post('/login', passport.authenticate('local', {
 	successRedirect: '/campgrounds',
 	failureRedirect: '/login'
 }))
+
 
 router.get('/logout', function(req,res){
 	req.logout()

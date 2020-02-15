@@ -29,7 +29,8 @@ app.use(methodOverride('_method'));
 
 app.use(express.static(__dirname + '/public'))
 
-console.log(process.env);
+// console.log(process.env);
+mongoose.set("debug", true);
 
 mongoose.connect(process.env.DATABASE, {useNewUrlParser: true, useUnifiedTopology: true})
 
@@ -80,5 +81,5 @@ app.use('/campgrounds', campgroundRoutes);
 app.use('/campgrounds/:id/comments', commentsRoute);
 app.use(indexRoutes);
 
-// console.log(process.env.PORT);
-app.listen(port, function(){console.log("Server has started")})
+console.log(process.env.PORT);
+app.listen(process.env.PORT, function(){console.log("Server has started")})

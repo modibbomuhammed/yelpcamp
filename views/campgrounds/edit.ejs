@@ -11,22 +11,26 @@
 		<div style="width:30%; margin: 25px auto;">
 			<form action="/campgrounds/<%= camp._id %>?_method=PUT" method="POST">
 				<div class="form-group">
-					<input type="text" name="name" value='<%= camp.name %>' class="form-control">	
+					<input type="text" name="camp[name]" value='<%= camp.name %>' class="form-control">	
 				</div>
 					
 				<div class="form-group">
-				<input type="text" name="image" value="<%= camp.image %>" class="form-control">	
+				<input type="text" name="camp[image]" value="<%= camp.image %>" class="form-control">	
 				</div>
 				
 				<div class="form-group">
-				<input type="number" name="price" value="<%= camp.price %>" class="form-control" min="0.01" step='0.01'>	
+				<input type="number" name="camp[price]" value="<%= camp.price %>" class="form-control" min="0.01" step='0.01'>	
 				</div>
 
 
 				<div class="form-group">
-					<textarea type="text" name="description" class="form-control"><%= camp.description %></textarea>
+					<textarea type="text" name="camp[description]" class="form-control"><%= camp.description %></textarea>
 				</div>
 				
+				<div class="form-group">
+					<input type="text" name="camp[location]" placeholder="location" class="form-control" value="<%= camp.location %>">
+				</div>
+
 				<div class="form-group">
 					<input type="submit" class="btn btn-lg btn-primary btn-block">	
 				</div>

@@ -1,7 +1,20 @@
 const express 	= require('express'),
 	  Campground = require('../models/campgrounds'),
 	  middleware = require('../middleware'),
-	  router	= express.Router();
+	  router	= express.Router(),
+	  NodeGeocoder = require('node-geocoder');
+		
+ 
+
+require("dotenv").config()
+const options = {
+  provider: 'google',
+  httpAdapter: 'https',
+  apiKey: process.env.GEOCODERAPI_KEY,
+  formatter: null
+};
+ 
+const geocoder = NodeGeocoder(options);
 
 
 // campground routes
@@ -11,14 +24,13 @@ router.get('/', (req,res) => {
 		if(err){
 			console.log(err)
 		} else {
-			// console.log(campgrounds)
 			res.render('campgrounds/index', {data: campgrounds})		
 		}
 	})
   	
 })
 
-router.post('/', middleware.isLoggedIn, (req,res) => {
+router.post('/', middleware.isLoggedIn, async (req,res) => {
 	var newCampground = {name: req.body.name,
 						 image: req.body.image,
 						 description: req.body.description,
@@ -28,19 +40,24 @@ router.post('/', middleware.isLoggedIn, (req,res) => {
 							 username: req.user.username
 						 }
 						}
-		Campground.create(newCampground, function(err, campground){
-		if(err){
-			console.log(err)
-		} else {
-			console.log('you have added a campground to db')
-			// console.log(campground)
-			res.redirect('/campgrounds')
+		try{
+			let data = await geocoder.geocode(req.body.location)
+			console.log(data[0])
+			newCampground.lat = data[0].latitude;
+			newCampground.lng = data[0].longitude;
+			newCampground.location = data[0].formattedAddress;
+			await Campground.create(newCampground);
+			req.flash("success", "You have added a campground")
+			res.redirect('/campgrounds');
 		}
-	});
+		
+		catch(err){
+				console.log(err);
+				req.flash("error", "Failed to create campground due to " + err)
+				res.redirect("back")
+		}
+});
 	
-	
-})
-
 
 router.get('/new', middleware.isLoggedIn,(req,res) => {
 	res.render('campgrounds/new')
@@ -68,10 +85,6 @@ router.get('/:id/edit', middleware.checkCampgroundOwnership ,function(req,res){
 				req.flash("error","Campground Not Found!")
 				res.redirect('back');
 			} else {
-				console.log(typeof foundCamp.author.id)
-				console.log(typeof req.user._id)
-				console.log(foundCamp.author.id)
-				console.log(req.user._id)
 				res.render('campgrounds/edit', {camp: foundCamp});
 				
 			}
@@ -80,20 +93,27 @@ router.get('/:id/edit', middleware.checkCampgroundOwnership ,function(req,res){
 	
 })
 
-router.put('/:id', middleware.checkCampgroundOwnership ,function(req,res){
-	let newCamp = {
-		name: req.body.name,
-		image: req.body.image,
-		description: req.body.description	
+router.put('/:id', middleware.checkCampgroundOwnership , async function(req,res){
+	let newCamp = req.body.camp;
+	newCamp.author = {
+		id: req.user._id,
+		username: req.user.username
 	}
-	Campground.findByIdAndUpdate(req.params.id, newCamp, function(err,updatedCamp){
-		if(err){
-			console.log(err);
-		} else {
-			console.log(updatedCamp);
+		try{
+			let data = await geocoder.geocode(newCamp.location)
+			newCamp.lat = data[0].latitude;
+			newCamp.lng = data[0].longitude;
+			let updatedCamp = await Campground.findByIdAndUpdate(req.params.id, newCamp)
+			console.log(updatedCamp)
+			req.flash("success", "You have updated your campground!!")
 			res.redirect('/campgrounds/' + updatedCamp._id);
 		}
-	})
+	
+		catch(err){
+			console.log(err)
+			req.flash('error', `There was a problem due to ${err}`);
+		}
+	
 })
 
 router.delete('/:id', middleware.checkCampgroundOwnership ,function(req,res){
