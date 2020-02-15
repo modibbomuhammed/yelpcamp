@@ -82,4 +82,4 @@ app.use('/campgrounds/:id/comments', commentsRoute);
 app.use(indexRoutes);
 
 console.log(process.env.PORT);
-app.listen(process.env.PORT, function(){console.log("Server has started")})
+app.listen(process.env.PORT, function(){console.log(`Server has started on port ${process.env.PORT}`)})
