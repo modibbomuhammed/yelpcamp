@@ -13,7 +13,7 @@ require("dotenv").config()
 const options = {
   provider: 'google',
   httpAdapter: 'https',
-  apiKey: process.env.GEOCODERAPI_KEY,
+  apiKey: 'AIzaSyDhIy_frf-SdiVdnYVBMHNZv1Uu61MVtx4', //process.env.GEOCODERAPI_KEY,
   formatter: null
 };
  
