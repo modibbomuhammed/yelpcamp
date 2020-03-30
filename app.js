@@ -70,6 +70,7 @@ passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
+
 app.use(function(req,res,next){
 	res.locals.currentUser 	= req.user 
 	res.locals.error		= req.flash("error");
@@ -81,5 +82,5 @@ app.use('/campgrounds', campgroundRoutes);
 app.use('/campgrounds/:id/comments', commentsRoute);
 app.use(indexRoutes);
 
-console.log(process.env.PORT);
+
 app.listen(process.env.PORT, function(){console.log(`Server has started on port ${process.env.PORT}`)})
