@@ -100,7 +100,7 @@ router.get('/:id', (req,res) => {
 			req.flash("error","Campground Not Found!!");
 			res.redirect('back')
 		} else {
-			res.render('campgrounds/show', {camp: foundcamp});
+			res.render('campgrounds/show', {camp: foundcamp });
 		}
 	})
 })
